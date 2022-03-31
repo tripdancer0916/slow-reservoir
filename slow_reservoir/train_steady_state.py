@@ -145,29 +145,96 @@ def main(config_path):
             likelihood = np.zeros((cfg['TRAIN']['BATCHSIZE'], cfg['DATALOADER']['INPUT_NEURON']))
             phi = np.linspace(-2, 2, cfg['DATALOADER']['INPUT_NEURON'])
             for i in range(cfg['TRAIN']['BATCHSIZE']):
-                likelihood[i] = np.exp(-(signal_mu[i].item() - phi) ** 2 / (2.0 * (signal_sigma[i].item()**2)))
+                tmp_likelihood = np.exp(-(signal_mu[i].item() - phi) ** 2 / (2.0 * (signal_sigma[i].item()**2)))
+                likelihood[i] = tmp_likelihood / np.sum(tmp_likelihood)
                 # if i == 0:
                 #     print(signal_mu[i].item())
                 #     print(likelihood[i])
 
             # Posterior and Maximum a posteriori
             posterior = np.zeros((cfg['TRAIN']['BATCHSIZE'], 90, cfg['DATALOADER']['INPUT_NEURON']))
-            map = np.zeros((cfg['TRAIN']['BATCHSIZE'], 90))
+            map = torch.zeros((cfg['TRAIN']['BATCHSIZE'], 90)).float().to(device)
+            map_loss = 0
+            # print(prior_list)
             for i in range(cfg['TRAIN']['BATCHSIZE']):
                 for t in range(20, 110):
                     # もしかしたらここまで自動微分を通した方がいいかもしれない...
                     # posterior[i, t-20] = likelihood[i] * prior_list.detach().cpu().numpy()[i, t]
-                    map[i, t-20] = np.argmax(likelihood[i] * prior_list.detach().cpu().numpy()[i, t]) / 25 - 2
+                    # print(torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t])
+                    # print(torch.argmax(torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t]))
+                    # posterior = torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t]
+                    # posterior = prior_list[i, t]
+                    # prior =  posterior / torch.sum(posterior)
+                    # print(posterior)
+                    # soft_max = torch.nn.Softmax(dim=0)(prior_list[i, t])
+                    # target = np.exp(-(true_signal[i].item() - phi) ** 2 / (2.0 * (0.25**2)))
+                    target = np.exp(-(0.8 - phi) ** 2 / (2.0 * (0.25**2)))
+                    # target /= np.sum(target)
+
+                    # print(target)
+                    map_loss += torch.nn.MSELoss()(
+                        prior_list[i, t],
+                        torch.from_numpy(target).float().to(device),
+                    )
+                    # soft_max = torch.nn.Softmax()(10000 * (prior_list[i, t]))
+                    # print(soft_max)
+                    # grid = torch.linspace(-2, 2, 100).float().to(device)
+                    # soft_argmax = torch.sum(soft_max * grid).float() 
+                    # argmax = torch.argmax(
+                    #    torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t]).float() / 25.0 - 2
+                    # argmax = torch.argmax(prior_list[i, t]).float() / 25.0 - 2
+                    # print(soft_argmax, argmax)
+                    
+                    # map[i, t-20] = soft_argmax
+                    
+                    # map[i, t-20] = torch.argmax(torch.from_numpy(prior_list[i, t]).float() / 25.0 - 2
                     # if i == 0 and t <= 30:
                     #     print('prior: ', np.argmax(prior_list.detach().cpu().numpy()[0, t]) / 25 - 2)
                     #     print('likelihood: ', np.argmax(likelihood[i]) / 25 - 2)
+            target_list = np.zeros((cfg['TRAIN']['BATCHSIZE'], 100))
+            softmax_list = np.zeros((cfg['TRAIN']['BATCHSIZE'], 100))
+
+            for i in range(cfg['TRAIN']['BATCHSIZE']):
+                target = np.exp(-(true_signal[i].item() - phi) ** 2 / (2.0 * (0.25**2)))
+                target /= np.sum(target)
+                target_list[i] = target
             
             # print(output_list[:, 20:].shape)
             # print(torch.from_numpy(map).to(device).shape)
-            map_loss = torch.nn.MSELoss()(
-                output_list[:, 20:, 0], 
-                torch.from_numpy(map).float().to(device),
+            
+            # map_loss = torch.nn.MSELoss()(
+                # output_list[:, 20:, 0], 
+                # torch.zeros((50, 90)).float().to(device),
+            #     map,
+            #     true_signal,
+            # )
+            
+            # map_loss = 0
+            """
+            for t in range(20, 110):
+                map_loss += torch.nn.MSELoss()(
+                # map[:, t-20],
+                prior_list[:, t, 0],
+                true_signal,
+                # torch.ones(50).float().to(device),
             )
+            """
+            # print((torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t]).shape)
+            # print((true_signal + 2) * 25)
+            # for i in range(cfg['TRAIN']['BATCHSIZE']):
+            #     for t in range(20, 110):
+                    # print(torch.unsqueeze(torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t], dim=0).shape)
+                    # print((true_signal[i] + 2) * 25)
+                    # map_loss += torch.nn.CrossEntropyLoss()(
+                    #     torch.unsqueeze(torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t], dim=0),
+                    #     torch.unsqueeze((true_signal[i] + 2) * 25, dim=0).long(),
+                    #  )
+                    # print(torch.unsqueeze(prior_list[i, t], dim=0).shape)
+                    # print(torch.unsqueeze((signal_mu[i] + 2) * 25, dim=0).long().to(device).shape)
+                    # map_loss += torch.nn.CrossEntropyLoss()(
+                    #     torch.unsqueeze(prior_list[i, t], dim=0),
+                    #     torch.unsqueeze((signal_mu[i] + 2) * 25, dim=0).long().to(device),
+                    # )
             true_value_loss = torch.nn.MSELoss()(
                 torch.mean(output_list[:, 20:, 0], dim=1),
                 true_signal,
@@ -189,7 +256,8 @@ def main(config_path):
             print(f'true_signal: {true_signal[0].item():.3f}')
             print(f'signal_mu:  {signal_mu[0].item():.3f}')
             print('output: ', output_list[0, -10:, 0].detach().cpu().numpy())
-            print('map: ', map[0, -10:])
+            # print('map: ', map[0, -10:])
+            print('prior_list: ', prior_list[0, -10:, 65:75].detach().cpu().numpy())
             print(
                 f'Train Epoch: {epoch}, MapLoss: {map_loss.item():.3f}, '
                 f'TrueValueLoss: {true_value_loss.item():.3f}',

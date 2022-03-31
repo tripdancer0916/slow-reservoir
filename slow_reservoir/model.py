@@ -24,6 +24,7 @@ class RNN(nn.Module):
         self.w_sf = nn.Linear(n_reservoir, n_hid)
         self.w_reservoir = nn.Linear(n_reservoir, n_reservoir)
         self.w_prior = nn.Linear(n_reservoir, n_in)
+        # self.w_prior = nn.Linear(n_reservoir, 1)
         
         self.sigma_neu = sigma_neu
         self.jij_std = jij_std
@@ -40,7 +41,8 @@ class RNN(nn.Module):
     def initialize_weights(self):
         nn.init.uniform_(self.w_hh.weight, -self.jij_std, self.jij_std)
 
-        fixed_weight_list = [self.w_fs, self.w_sf, self.w_reservoir, self.w_prior]
+        # fixed_weight_list = [self.w_fs, self.w_sf, self.w_reservoir, self.w_prior]
+        fixed_weight_list = [self.w_prior]
         for weight in fixed_weight_list:
             for p in weight.parameters():
                 p.required_grad = False
@@ -72,7 +74,9 @@ class RNN(nn.Module):
             hidden = (1 - self.alpha_fast) * hidden + self.alpha_fast * tmp_hidden + neural_noise
             reservoir = (1 - self.alpha_slow) * reservoir + self.alpha_slow * tmp_reservoir
             output = self.w_out(hidden)
-            pred_prior = torch.nn.Softmax(dim=1)(self.w_prior(reservoir))
+            # pred_prior = torch.nn.Softmax(dim=1)(self.w_prior(reservoir))
+            pred_prior = torch.nn.Sigmoid()(self.w_prior(reservoir))
+            # pred_prior = self.w_prior(reservoir)
             output = torch.clamp(output, min=-2, max=2)
             hidden_list[t] = hidden
             reservoir_list[t] = reservoir
