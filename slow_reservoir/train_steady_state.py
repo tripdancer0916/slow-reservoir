@@ -162,17 +162,19 @@ def main(config_path):
                     # posterior[i, t-20] = likelihood[i] * prior_list.detach().cpu().numpy()[i, t]
                     # print(torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t])
                     # print(torch.argmax(torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t]))
-                    # posterior = torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t]
+                    posterior = torch.from_numpy(likelihood[i]).float().to(device) * prior_list[i, t]
+                    posterior /= torch.sum(posterior)
                     # posterior = prior_list[i, t]
                     # prior =  posterior / torch.sum(posterior)
                     # print(posterior)
                     # soft_max = torch.nn.Softmax(dim=0)(prior_list[i, t])
-                    # target = np.exp(-(true_signal[i].item() - phi) ** 2 / (2.0 * (0.25**2)))
-                    target = np.exp(-(0.8 - phi) ** 2 / (2.0 * (0.25**2)))
-                    # target /= np.sum(target)
+                    target = np.exp(-(cfg['DATALOADER']['PRE_MU'] - phi) ** 2 / (2.0 * (cfg['DATALOADER']['PRE_SIGMA']**2)))
+                    # target = np.exp(-(0.8 - phi) ** 2 / (2.0 * (0.25**2)))
+                    target /= np.sum(target)
 
                     # print(target)
                     map_loss += torch.nn.MSELoss()(
+                        # posterior,
                         prior_list[i, t],
                         torch.from_numpy(target).float().to(device),
                     )
@@ -257,7 +259,7 @@ def main(config_path):
             print(f'signal_mu:  {signal_mu[0].item():.3f}')
             print('output: ', output_list[0, -10:, 0].detach().cpu().numpy())
             # print('map: ', map[0, -10:])
-            print('prior_list: ', prior_list[0, -10:, 65:75].detach().cpu().numpy())
+            # print('prior_list: ', prior_list[0, -10:, 65:75].detach().cpu().numpy())
             print(
                 f'Train Epoch: {epoch}, MapLoss: {map_loss.item():.3f}, '
                 f'TrueValueLoss: {true_value_loss.item():.3f}',
