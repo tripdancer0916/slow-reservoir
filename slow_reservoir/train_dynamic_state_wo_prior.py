@@ -13,7 +13,7 @@ import yaml
 from torch.autograd import Variable
 
 from dataset.dynamic_state import DynamicState, State
-from model import RNN
+from model import RNN, RNNSimple
 
 
 def main(config_path):
@@ -38,18 +38,27 @@ def main(config_path):
     use_cuda = cfg['MACHINE']['CUDA'] and torch.cuda.is_available()
     torch.manual_seed(cfg['MACHINE']['SEED'])
     device = torch.device('cuda' if use_cuda else 'cpu')
-    # print(f'device: {device}')
 
-    model = RNN(
-        n_in=cfg['DATALOADER']['INPUT_NEURON'],
-        n_out=1,
-        n_hid=cfg['MODEL']['SIZE'],
-        n_reservoir=cfg['MODEL']['RESERVOIR'],
-        device=device,
-        alpha_fast=cfg['MODEL']['ALPHA_FAST'],
-        alpha_slow=cfg['MODEL']['ALPHA_SLOW'],
-        sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-    ).to(device)
+    if cfg['MODEL']['RESERVOIR'] == 0:
+        model = RNNSimple(
+            n_in=cfg['DATALOADER']['INPUT_NEURON'],
+            n_out=1,
+            n_hid=cfg['MODEL']['SIZE'],
+            device=device,
+            alpha=cfg['MODEL']['ALPHA_FAST'],
+            sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+        ).to(device)
+    else:
+        model = RNN(
+            n_in=cfg['DATALOADER']['INPUT_NEURON'],
+            n_out=1,
+            n_hid=cfg['MODEL']['SIZE'],
+            n_reservoir=cfg['MODEL']['RESERVOIR'],
+            device=device,
+            alpha_fast=cfg['MODEL']['ALPHA_FAST'],
+            alpha_slow=cfg['MODEL']['ALPHA_SLOW'],
+            sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+        ).to(device)
 
     state_list = [
         State(mu=0, sigma=0.2),
@@ -96,12 +105,9 @@ def main(config_path):
     model.train()
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         for i, data in enumerate(train_dataloader):
-            inputs, true_signal_list, mu_history, sigma_history = data
-            # print(mu_history.shape)
+            inputs, true_signal_list, _, _ = data
             inputs =  Variable(inputs.float()).to(device)
             true_signal_list = Variable(true_signal_list.float()).to(device)
-
-            # print(true_signal_list.shape)
 
             hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
             hidden = torch.from_numpy(hidden_np).float()
@@ -115,28 +121,23 @@ def main(config_path):
             hidden = hidden.detach()
             reservoir = reservoir.detach()
 
-            _, output_list, prior_list = model(
-                inputs, 
-                hidden, 
-                reservoir,
-                cfg['DATALOADER']['TIME_LENGTH'],
-            )
+            if cfg['MODEL']['RESERVOIR'] == 0:
+                _, output_list, _ = model(
+                    inputs, 
+                    hidden, 
+                    cfg['DATALOADER']['TIME_LENGTH'],
+                )
+            else:
+                _, output_list, _ = model(
+                    inputs, 
+                    hidden, 
+                    reservoir,
+                    cfg['DATALOADER']['TIME_LENGTH'],
+                )
 
-            # Generate target
-            prior_loss = 0
             true_value_loss = 0
             for i in range(cfg['TRAIN']['BATCHSIZE']):
                 for t in range(20, 120):
-                    target = np.exp(-(mu_history[i, t].item() - phi) ** 2 / (2.0 * (sigma_history[i, t].item()**2)))
-                    target /= np.sum(target)
-
-                    normalized_prior = prior_list[i, t] / torch.sum(prior_list[i, t])
-
-                    prior_loss += torch.nn.MSELoss()(
-                        normalized_prior,
-                        torch.from_numpy(target).float().to(device),
-                    )
-
                     true_value_loss += torch.nn.MSELoss()(
                         output_list[i, t, 0],
                         true_signal_list[i, t],
@@ -144,7 +145,7 @@ def main(config_path):
 
             true_value_loss /= 5000
             true_value_loss_coef = cfg['TRAIN']['TRUE_VALUE_LOSS_COEF']
-            loss = prior_loss + true_value_loss * true_value_loss_coef
+            loss = true_value_loss * true_value_loss_coef
             loss.backward()
             optimizer.step()
 
@@ -157,26 +158,31 @@ def main(config_path):
 
         if epoch % cfg['TRAIN']['DISPLAY_EPOCH'] == 0:
             print(f'true_signal: ', true_signal_list[0, -10:].detach().cpu().numpy())
-            # print(f'signal_mu:  {signal_mu[0].item():.3f}')
             print('output: ', output_list[0, -10:, 0].detach().cpu().numpy())
-            # print('map: ', map[0, -10:])
-            # print('prior_list: ', prior_list[0, -10:, 65:75].detach().cpu().numpy())
-            print(
-                f'Train Epoch: {epoch}, PriorLoss: {prior_loss.item():.3f}, '
-                f'TrueValueLoss: {true_value_loss.item():.3f}',
-            )
+            print(f'Train Epoch: {epoch}, TrueValueLoss: {true_value_loss.item():.3f}')
             if math.isnan(loss.item()):
                 print('Rewinding due to nan.')
-                model = RNN(
-                    n_in=cfg['DATALOADER']['INPUT_NEURON'],
-                    n_out=1,
-                    n_hid=cfg['MODEL']['SIZE'],
-                    n_reservoir=cfg['MODEL']['RESERVOIR'],
-                    device=device,
-                    alpha_fast=cfg['MODEL']['ALPHA_FAST'],
-                    alpha_slow=cfg['MODEL']['ALPHA_SLOW'],
-                    sigma_neu=cfg['MODEL']['SIGMA_NEU'],
-                ).to(device)
+                if cfg['MODEL']['RESERVOIR'] == 0:
+                    model = RNNSimple(
+                        n_in=cfg['DATALOADER']['INPUT_NEURON'],
+                        n_out=1,
+                        n_hid=cfg['MODEL']['SIZE'],
+                        device=device,
+                        alpha=cfg['MODEL']['ALPHA_FAST'],
+                        sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+                    ).to(device)
+                else:
+                    model = RNN(
+                        n_in=cfg['DATALOADER']['INPUT_NEURON'],
+                        n_out=1,
+                        n_hid=cfg['MODEL']['SIZE'],
+                        n_reservoir=cfg['MODEL']['RESERVOIR'],
+                        device=device,
+                        alpha_fast=cfg['MODEL']['ALPHA_FAST'],
+                        alpha_slow=cfg['MODEL']['ALPHA_SLOW'],
+                        sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+                    ).to(device)
+                
                 model_path = os.path.join(tmp_path, f'epoch_{epoch-5}.pth')
                 model.load_state_dict(torch.load(model_path, map_location=device))
                 continue
