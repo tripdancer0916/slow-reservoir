@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import torch.optim as optim
 import yaml
-
 from torch.autograd import Variable
 
 from dataset.steady_state import SteadyState

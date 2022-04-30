@@ -11,7 +11,7 @@ import torch.optim as optim
 import yaml
 from torch.autograd import Variable
 
-from dataset.dynamic_state import DynamicState, State
+from dataset.dynamic_state_random import DynamicState, State
 from model import RNN, RNNSimple
 
 
@@ -23,7 +23,7 @@ def main(config_path):
     model_name = os.path.splitext(os.path.basename(config_path))[0]
 
     # save path
-    save_path = f'trained_model/dynamic_state/{model_name}'
+    save_path = f'trained_model/dynamic_state_random/{model_name}'
     tmp_path = f'{save_path}/tmp'
     os.makedirs(save_path, exist_ok=True)
     os.makedirs(tmp_path, exist_ok=True)
@@ -65,16 +65,10 @@ def main(config_path):
         State(mu=-0.5, sigma=0.1),
     ]
     """
-    state_list = [
-        State(mu=0.5, sigma=0.04),
-        State(mu=0.5, sigma=0.3),
-        State(mu=0.5, sigma=0.8),
-    ]
     train_dataset = DynamicState(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
         uncertainty=cfg['DATALOADER']['UNCERTAINTY'],
-        state_list=state_list,
         transition_probability=0.03,
         g_scale=cfg['DATALOADER']['G_SCALE'],
         sigma_sq=cfg['DATALOADER']['SIGMA_SQ'],
@@ -106,7 +100,6 @@ def main(config_path):
 
     a_list = torch.linspace(-2, 2, 100) + 0.02
     a_list = a_list.to(device)
-    phi = np.linspace(-2, 2, cfg['DATALOADER']['INPUT_NEURON'])
     model.train()
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         for i, data in enumerate(train_dataloader):
