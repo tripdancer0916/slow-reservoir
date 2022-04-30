@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import torch.optim as optim
 import yaml
-
 from torch.autograd import Variable
 
 from dataset.dynamic_state import DynamicState, State
@@ -51,10 +50,17 @@ def main(config_path):
         sigma_neu=cfg['MODEL']['SIGMA_NEU'],
     ).to(device)
 
+    """
     state_list = [
         State(mu=0, sigma=0.2),
         State(mu=0.5, sigma=0.4),
         State(mu=-0.5, sigma=0.1),
+    ]
+    """
+    state_list = [
+        State(mu=0.5, sigma=0.2),
+        State(mu=0.5, sigma=0.4),
+        State(mu=0.5, sigma=0.1),
     ]
     train_dataset = DynamicState(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
