@@ -20,7 +20,6 @@ class DynamicState(data.Dataset):
                 time_length,
                 input_neuron,
                 uncertainty,
-                # state_list,
                 transition_probability,
                 g_scale=1,
                 sigma_sq=5,
@@ -31,7 +30,6 @@ class DynamicState(data.Dataset):
         self.time_length = time_length
         self.input_neuron = input_neuron
         self.uncertainty = uncertainty
-        # self.state_list = state_list
         self.transition_probability = transition_probability
         self.g_scale = g_scale
         self.sigma_sq = sigma_sq
@@ -39,17 +37,16 @@ class DynamicState(data.Dataset):
         self.g_max = g_max
         self.batch_size = batch_size
 
+        self.phi = np.linspace(-2, 2, self.input_neuron)
+
     def __len__(self):
         return self.batch_size * 5
 
     def __getitem__(self, item):
         signal_input = np.zeros((self.time_length, self.input_neuron))
         true_signal_list = np.zeros(self.time_length)
-
-        phi = np.linspace(-2, 2, self.input_neuron)
         mu_history = []
         sigma_history = []
-        # current_state = random.choice(self.state_list)
         current_state = State(mu=np.random.rand()-0.5, sigma=np.random.rand()*0.8)
         mu_history.append(current_state.mu)
         sigma_history.append(current_state.sigma)
@@ -60,20 +57,16 @@ class DynamicState(data.Dataset):
             signal_mu = np.random.normal(true_signal, signal_sigma)
 
             # signal
-            signal_base = g * self.g_scale * np.exp(-(signal_mu - phi) ** 2 / (2.0 * (self.sigma_sq**2)))
+            signal_base = g * self.g_scale * np.exp(-(signal_mu - self.phi) ** 2 / (2.0 * (self.sigma_sq**2)))
             signal_input[t] = np.random.poisson(signal_base)
             true_signal_list[t] = true_signal
 
             if np.random.rand() < self.transition_probability:
-                # current_state = random.choice([state for state in self.state_list if state != current_state])
                 current_state = State(mu=np.random.rand()-0.5, sigma=np.random.rand()*0.5)
-                # print(current_state)
             
             mu_history.append(current_state.mu)
             sigma_history.append(current_state.sigma)
         mu_history = np.array(mu_history, dtype='float')
         sigma_history = np.array(sigma_history)
-
-        # print(mu_history)
 
         return signal_input, true_signal_list, mu_history, sigma_history
