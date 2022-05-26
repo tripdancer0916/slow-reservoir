@@ -119,13 +119,13 @@ def main(config_path):
             reservoir = reservoir.detach()
 
             if cfg['MODEL']['RESERVOIR'] == 0:
-                _, output_list, _ = model(
+                _, output_list, _, _ = model(
                     inputs, 
                     hidden, 
                     cfg['DATALOADER']['TIME_LENGTH'],
                 )
             else:
-                _, output_list, _ = model(
+                _, output_list, _, _ = model(
                     inputs, 
                     hidden, 
                     reservoir,
