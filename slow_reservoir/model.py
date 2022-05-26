@@ -8,7 +8,7 @@ class RNN(nn.Module):
     def __init__(
                 self, n_in, n_out, n_hid, n_reservoir, 
                 device, alpha_fast=1, alpha_slow=0.1, jij_std=0.045,
-                sigma_neu=0.05,
+                sigma_neu=0.05, activate_func='relu',
                 ):
         super(RNN, self).__init__()
         self.n_in = n_in
@@ -35,10 +35,11 @@ class RNN(nn.Module):
         self.alpha_slow = torch.ones(self.n_reservoir) * alpha_slow
         self.alpha_slow = self.alpha_slow.to(self.device)
 
+        self.activate_func = activate_func
+
     def initialize_weights(self):
         nn.init.uniform_(self.w_hh.weight, -self.jij_std, self.jij_std)
 
-        # fixed_weight_list = [self.w_fs, self.w_sf, self.w_reservoir, self.w_prior]
         fixed_weight_list = [self.w_prior]
         for weight in fixed_weight_list:
             for p in weight.parameters():
@@ -62,10 +63,21 @@ class RNN(nn.Module):
 
         for t in range(length):
             tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden) + self.w_sf(reservoir)
-            tmp_hidden = torch.nn.functional.relu(tmp_hidden)
-
             tmp_reservoir = self.w_fs(hidden) + self.w_reservoir(reservoir)
-            tmp_reservoir = torch.nn.functional.relu(tmp_reservoir)
+
+            if self.activate_func == 'relu':
+                tmp_hidden = torch.nn.functional.relu(tmp_hidden)
+                tmp_reservoir = torch.nn.functional.relu(tmp_reservoir)
+            elif self.activate_func == 'tanh':
+                tmp_hidden = torch.nn.functional.tanh(tmp_hidden) 
+                tmp_reservoir = torch.nn.functional.tanh(tmp_reservoir)
+            elif self.activate_func == 'relu_clamped':
+                tmp_hidden = torch.nn.functional.relu(tmp_hidden)
+                tmp_hidden = torch.clamp(tmp_hidden, max=2)
+                tmp_reservoir = torch.nn.functional.relu(tmp_reservoir)
+                tmp_reservoir = torch.clamp(tmp_reservoir, max=2)
+            else:
+                raise NotImplementedError
 
             neural_noise = self.make_neural_noise(hidden, self.alpha_fast)
             reservoir_noise = self.make_neural_noise(reservoir, self.alpha_slow)
@@ -91,7 +103,7 @@ class RNNSimple(nn.Module):
     def __init__(
                 self, n_in, n_out, n_hid, 
                 device, alpha=1, jij_std=0.045,
-                sigma_neu=0.05,
+                sigma_neu=0.05, activate_func='relu',
                 ):
         super(RNNSimple, self).__init__()
         self.n_in = n_in
@@ -107,6 +119,8 @@ class RNNSimple(nn.Module):
 
         self.alpha = torch.ones(self.n_hid) * alpha
         self.alpha = self.alpha.to(self.device)
+
+        self.activate_func = activate_func
 
     def initialize_weights(self):
         nn.init.uniform_(self.w_hh.weight, -self.jij_std, self.jij_std)
@@ -127,7 +141,17 @@ class RNNSimple(nn.Module):
 
         for t in range(length):
             tmp_hidden = self.w_in(input_signal[t]) + self.w_hh(hidden)
-            tmp_hidden = torch.nn.functional.relu(tmp_hidden)
+
+            if self.activate_func == 'relu':
+                tmp_hidden = torch.nn.functional.relu(tmp_hidden)
+            elif self.activate_func == 'tanh':
+                tmp_hidden = torch.nn.functional.tanh(tmp_hidden)
+            elif self.activate_func == 'relu_clamped':
+                tmp_hidden = torch.nn.functional.relu(tmp_hidden) 
+                tmp_hidden = torch.clamp(tmp_hidden, max=2)
+            else:
+                raise NotImplementedError
+
             neural_noise = self.make_neural_noise(hidden, self.alpha)
             hidden = (1 - self.alpha) * hidden + self.alpha * tmp_hidden + neural_noise
 

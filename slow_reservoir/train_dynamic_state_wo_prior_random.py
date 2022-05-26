@@ -11,7 +11,7 @@ import torch.optim as optim
 import yaml
 from torch.autograd import Variable
 
-from dataset.dynamic_state_random import DynamicState, State
+from dataset.dynamic_state_random import DynamicState
 from model import RNN, RNNSimple
 
 
@@ -19,6 +19,11 @@ def main(config_path):
     # hyper-parameter
     with open(config_path, 'r') as f:
         cfg = yaml.safe_load(f)
+
+    if 'ACTIVATE_FUNC' not in cfg['MODEL']:
+        cfg['MODEL']['ACTIVATE_FUNC'] = 'relu'
+    if 'TRANSITION_PROB' not in cfg['DATALOADER']:
+        cfg['DATALOADER']['TRANSITION_PROB'] = 0.03
 
     model_name = os.path.splitext(os.path.basename(config_path))[0]
 
@@ -46,6 +51,7 @@ def main(config_path):
             device=device,
             alpha=cfg['MODEL']['ALPHA_FAST'],
             sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+            activate_func=cfg['MODEL']['ACTIVATE_FUNC'],
         ).to(device)
     else:
         model = RNN(
@@ -57,14 +63,9 @@ def main(config_path):
             alpha_fast=cfg['MODEL']['ALPHA_FAST'],
             alpha_slow=cfg['MODEL']['ALPHA_SLOW'],
             sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+            activate_func=cfg['MODEL']['ACTIVATE_FUNC'],
         ).to(device)
-    """
-    state_list = [
-        State(mu=0, sigma=0.2),
-        State(mu=0.5, sigma=0.4),
-        State(mu=-0.5, sigma=0.1),
-    ]
-    """
+
     train_dataset = DynamicState(
         time_length=cfg['DATALOADER']['TIME_LENGTH'],
         input_neuron=cfg['DATALOADER']['INPUT_NEURON'],
@@ -98,8 +99,6 @@ def main(config_path):
     else:
         ValueError('optimizer must be Adam or SGD')
 
-    a_list = torch.linspace(-2, 2, 100) + 0.02
-    a_list = a_list.to(device)
     model.train()
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         for i, data in enumerate(train_dataloader):
@@ -120,13 +119,13 @@ def main(config_path):
             reservoir = reservoir.detach()
 
             if cfg['MODEL']['RESERVOIR'] == 0:
-                _, output_list, _ = model(
+                _, output_list, _, _ = model(
                     inputs, 
                     hidden, 
                     cfg['DATALOADER']['TIME_LENGTH'],
                 )
             else:
-                _, output_list, _ = model(
+                _, output_list, _, _ = model(
                     inputs, 
                     hidden, 
                     reservoir,
@@ -168,6 +167,7 @@ def main(config_path):
                         device=device,
                         alpha=cfg['MODEL']['ALPHA_FAST'],
                         sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+                        activate_func=cfg['MODEL']['ACTIVATE_FUNC'],
                     ).to(device)
                 else:
                     model = RNN(
@@ -179,6 +179,7 @@ def main(config_path):
                         alpha_fast=cfg['MODEL']['ALPHA_FAST'],
                         alpha_slow=cfg['MODEL']['ALPHA_SLOW'],
                         sigma_neu=cfg['MODEL']['SIGMA_NEU'],
+                        activate_func=cfg['MODEL']['ACTIVATE_FUNC'],
                     ).to(device)
                 
                 model_path = os.path.join(tmp_path, f'epoch_{epoch-5}.pth')
