@@ -51,9 +51,9 @@ class DynamicState(data.Dataset):
         mu_history.append(current_state.mu)
         sigma_history.append(current_state.sigma)
         g = np.random.rand() * (self.g_max - self.g_min) + self.g_min
+        signal_sigma = np.sqrt(1 / g) * self.uncertainty
         for t in range(self.time_length):
             true_signal = current_state()
-            signal_sigma = np.sqrt(1 / g) * self.uncertainty
             signal_mu = np.random.normal(true_signal, signal_sigma)
 
             # signal
@@ -62,7 +62,7 @@ class DynamicState(data.Dataset):
             true_signal_list[t] = true_signal
 
             if np.random.rand() < self.transition_probability:
-                current_state = State(mu=np.random.rand()-0.5, sigma=np.random.rand()*0.5)
+                current_state = State(mu=np.random.rand()-0.5, sigma=np.random.rand()*0.8)
             
             mu_history.append(current_state.mu)
             sigma_history.append(current_state.sigma)
