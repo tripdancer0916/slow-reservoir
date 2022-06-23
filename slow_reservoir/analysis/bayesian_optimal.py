@@ -43,9 +43,9 @@ class BayesianOptimality:
         self.model.load_state_dict(torch.load(model_path, map_location=self.device))
         self.model.eval()
 
-        self.sigma_l=math.sqrt(1/1) * 0.5
+        self.sigma_l=math.sqrt(1/1.25) * 0.5
         # self.g = 1 / (4 * self.sigma_l)
-        self.g = 0.1
+        self.g = 1.25
         # self.sigma_l = 1/8
         
     def make_signal_for_prior(self, time_length, mu_p, sigma_p, uncertainty=0.5):
