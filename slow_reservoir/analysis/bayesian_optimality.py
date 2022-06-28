@@ -4,6 +4,8 @@ import math
 import os
 import sys
 
+sys.path.append('../')
+
 import numpy as np
 import torch
 import yaml
@@ -12,8 +14,6 @@ from models.rnn import RNN, RNNTrainableAlpha
 from models.simple_rnn import RNNSimple, RNNSimpleTrainableAlpha
 from sklearn.metrics import mean_squared_error
 from tqdm import tqdm
-
-sys.path.append('../')
 
 
 class BayesianOptimality:

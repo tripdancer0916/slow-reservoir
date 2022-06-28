@@ -5,10 +5,10 @@ import sys
 import numpy as np
 import torch
 import yaml
-from dataset.dynamic_state_random import State
-from models.rnn import RNN, RNNTrainableAlpha
 
 sys.path.append('../')
+from dataset.dynamic_state_random import State
+from models.rnn import RNN, RNNTrainableAlpha
 
 
 class DivisionRoles:
