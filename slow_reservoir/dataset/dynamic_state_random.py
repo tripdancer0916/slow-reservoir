@@ -1,6 +1,4 @@
 """Generating input and target"""
-import random
-
 import numpy as np
 import torch.utils.data as data
 
@@ -21,7 +19,6 @@ class DynamicState(data.Dataset):
                 input_neuron,
                 uncertainty,
                 transition_probability,
-                g_scale=1,
                 sigma_sq=5,
                 g_min=0.25,
                 g_max=1.25,
@@ -31,7 +28,6 @@ class DynamicState(data.Dataset):
         self.input_neuron = input_neuron
         self.uncertainty = uncertainty
         self.transition_probability = transition_probability
-        self.g_scale = g_scale
         self.sigma_sq = sigma_sq
         self.g_min = g_min
         self.g_max = g_max
@@ -57,7 +53,7 @@ class DynamicState(data.Dataset):
             signal_mu = np.random.normal(true_signal, signal_sigma)
 
             # signal
-            signal_base = g * self.g_scale * np.exp(-(signal_mu - self.phi) ** 2 / (2.0 * (self.sigma_sq**2)))
+            signal_base = g * np.exp(-(signal_mu - self.phi) ** 2 / (2.0 * (self.sigma_sq**2)))
             signal_input[t] = np.random.poisson(signal_base)
             true_signal_list[t] = true_signal
 

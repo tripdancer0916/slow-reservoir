@@ -1,17 +1,6 @@
 import argparse
-import copy
-import math
-import os
-import sys
 
-import numpy as np
-from sklearn.metrics import mean_squared_error
-import torch
-import yaml
-
-sys.path.append('../')
-from bayesian_optimal import BayesianOptimality
-from model import RNN
+from analysis.bayesian_optimality import BayesianOptimality
 
 
 parser = argparse.ArgumentParser(description='PyTorch RNN training')
