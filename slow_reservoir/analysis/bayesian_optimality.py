@@ -138,7 +138,7 @@ class BayesianOptimality:
         reservoir = reservoir.to(self.device)
 
         if self.cfg['MODEL']['RESERVOIR'] == 0:
-            hidden_list, _ = self.model(inputs, hidden, reservoir, 120)
+            hidden_list, _ = self.model(inputs, hidden, 120)
         else:
             hidden_list, _, reservoir_list = self.model(inputs, hidden, reservoir, 120)
             reservoir_dynamics = reservoir_list.cpu().detach().numpy()
@@ -167,7 +167,7 @@ class BayesianOptimality:
         inputs = inputs.to(self.device)
 
         if self.cfg['MODEL']['RESERVOIR'] == 0:
-            _, output_list = self.model(inputs, hidden, reservoir, 1)
+            _, output_list = self.model(inputs, hidden, 1)
         else:
             _, output_list, _ = self.model(inputs, hidden, reservoir, 1)
 

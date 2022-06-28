@@ -5,6 +5,7 @@ import sys
 
 import numpy as np
 import torch
+from tqdm import tqdm
 import yaml
 
 sys.path.append('../')
@@ -84,12 +85,12 @@ class RoleDivision:
         return input_signals
 
     def calc_variance(self, sample_num):
-        neural_states = np.zeros((500, 200))
-        reservoir_states = np.zeros((500, 50))
+        neural_states = np.zeros((sample_num, 200))
+        reservoir_states = np.zeros((sample_num, 50))
 
         mu_p_list = []
         sigma_p_list = []
-        for i in range(sample_num):
+        for i in tqdm(range(sample_num)):
             mu_p = np.random.rand() - 0.5
             sigma_p = np.random.rand() * 0.8
             mu_p_list.append(mu_p)

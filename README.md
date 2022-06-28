@@ -54,6 +54,23 @@ $ python train_random_dynamic_state.py {cfg_path}
 ## 解析
 ### 時間スケールが固定されたモデル
 #### 役割分担の定量化
+```bash
+$ python division_of_roles.py \
+    ../cfg/dynamic_state/20220428_3.cfg \
+    ../trained_model/dynamic_state_random/20220428_3/epoch_500.pth \
+    -sn 500
+$ python division_of_roles.py {cfg_path} {model_path} -sn {sample_num}
+```
+
+結果は以下のように表示される。
+
+```
+Variation sub: 0.01090
+Variation main: 0.00439
+```
+
+`Variation sub`はsub networkの状態を別のpriorによって到達する内部状態に変化させた時の出力の分散、
+`Variation main`はmain networkの状態を別のpriorによって到達する内部状態に変化させた時の出力の分散を表す。
 
 #### ベイズ推定の最適性
 ```bash
