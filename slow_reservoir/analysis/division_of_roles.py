@@ -1,15 +1,14 @@
-import os
 import math
+import os
+import sys
 
 import numpy as np
-import sys
-import yaml
-from sklearn.metrics import mean_squared_error
 import torch
+import yaml
+from dataset.dynamic_state_random import State
+from models.rnn import RNN, RNNTrainableAlpha
 
 sys.path.append('../')
-from models.rnn import RNN, RNNTrainableAlpha
-from dataset.dynamic_state_random import State
 
 
 class DivisionRoles:
@@ -51,7 +50,7 @@ class DivisionRoles:
         model.load_state_dict(torch.load(model_path, map_location=device))
         self.model = model.eval()
         self.device = device
-        self.sigma_l = math.sqrt(1/1.25) * 0.5
+        self.sigma_l = math.sqrt(1 / 1.25) * 0.5
         self.g = 1.25
         self.cfg = cfg
 
@@ -95,48 +94,48 @@ class DivisionRoles:
             mu_p_list.append(mu_p)
             sigma_p_list.append(sigma_p)
             input_signal = self.make_signal_for_prior(
-                time_length=50, 
+                time_length=50,
                 mu_p=mu_p,
                 sigma_p=sigma_p,
                 uncertainty=0.5,
                 g=1.25,
             )
-            inputs = torch.from_numpy(input_signal).float()                                 
-            inputs = inputs.to(self.device) 
+            inputs = torch.from_numpy(input_signal).float()
+            inputs = inputs.to(self.device)
             hidden_np = np.random.normal(0, 0.5, size=(1, self.cfg['MODEL']['SIZE']))
             reservoir_np = np.random.normal(0, 0.5, size=(1, self.cfg['MODEL']['RESERVOIR']))
 
-            hidden = torch.from_numpy(hidden_np).float()                               
-            hidden = hidden.to(self.device) 
+            hidden = torch.from_numpy(hidden_np).float()
+            hidden = hidden.to(self.device)
             reservoir = torch.from_numpy(reservoir_np).float()
             reservoir = reservoir.to(self.device)
-            hidden_list, _, _, reservoir_list = self.model(inputs, hidden, reservoir, 50) 
+            hidden_list, _, _, reservoir_list = self.model(inputs, hidden, reservoir, 50)
 
-            neural_dynamics = hidden_list.cpu().detach().numpy()   
+            neural_dynamics = hidden_list.cpu().detach().numpy()
             reservoir_dynamics = reservoir_list.cpu().detach().numpy()
 
             neural_states[i] = neural_dynamics[0, -1]
             reservoir_states[i] = reservoir_dynamics[0, -1]
 
         input_signal = self.make_signal_for_prior(
-            time_length=50, 
+            time_length=50,
             mu_p=0,
             sigma_p=0.4,
             uncertainty=0.5,
             g=1.25,
         )
-        inputs = torch.from_numpy(input_signal).float()                                 
-        inputs = inputs.to(self.device) 
+        inputs = torch.from_numpy(input_signal).float()
+        inputs = inputs.to(self.device)
         hidden_np = np.random.normal(0, 0.5, size=(1, self.cfg['MODEL']['SIZE']))
         reservoir_np = np.random.normal(0, 0.5, size=(1, self.cfg['MODEL']['RESERVOIR']))
 
-        hidden = torch.from_numpy(hidden_np).float()                               
-        hidden = hidden.to(self.device) 
+        hidden = torch.from_numpy(hidden_np).float()
+        hidden = hidden.to(self.device)
         reservoir = torch.from_numpy(reservoir_np).float()
         reservoir = reservoir.to(self.device)
-        hidden_list, _, _, reservoir_list = self.model(inputs, hidden, reservoir, 50) 
+        hidden_list, _, _, reservoir_list = self.model(inputs, hidden, reservoir, 50)
 
-        base_neural_state = hidden_list.cpu().detach().numpy()[:, -1] 
+        base_neural_state = hidden_list.cpu().detach().numpy()[:, -1]
         base_reservoir_state = reservoir_list.cpu().detach().numpy()[:, -1]
 
         input_signal = self.make_sample_signal(0, 500)
@@ -158,9 +157,3 @@ class DivisionRoles:
         var_main = np.var(output_list[:, 0, 0].detach().numpy())
 
         return var_sub, var_main
-
-
-
-
-
-

@@ -8,11 +8,10 @@ import numpy as np
 import torch
 import torch.optim as optim
 import yaml
-from torch.autograd import Variable
-
 from dataset.dynamic_state_random import DynamicState
 from models.rnn import RNN, RNNTrainableAlpha
 from models.simple_rnn import RNNSimple, RNNSimpleTrainableAlpha
+from torch.autograd import Variable
 
 
 def main(config_path):
@@ -33,7 +32,7 @@ def main(config_path):
 
     # copy config file
     shutil.copyfile(
-        config_path, 
+        config_path,
         os.path.join(save_path, os.path.basename(config_path)),
     )
 
@@ -123,7 +122,7 @@ def main(config_path):
     for epoch in range(cfg['TRAIN']['NUM_EPOCH'] + 1):
         for i, data in enumerate(train_dataloader):
             inputs, true_signal_list, _, _ = data
-            inputs =  Variable(inputs.float()).to(device)
+            inputs = Variable(inputs.float()).to(device)
             true_signal_list = Variable(true_signal_list.float()).to(device)
 
             hidden_np = np.random.normal(0, 0.5, size=(cfg['TRAIN']['BATCHSIZE'], cfg['MODEL']['SIZE']))
@@ -140,14 +139,14 @@ def main(config_path):
 
             if cfg['MODEL']['RESERVOIR'] == 0:
                 _, output_list = model(
-                    inputs, 
-                    hidden, 
+                    inputs,
+                    hidden,
                     cfg['DATALOADER']['TIME_LENGTH'],
                 )
             else:
                 _, output_list, _ = model(
-                    inputs, 
-                    hidden, 
+                    inputs,
+                    hidden,
                     reservoir,
                     cfg['DATALOADER']['TIME_LENGTH'],
                 )
@@ -173,9 +172,10 @@ def main(config_path):
             torch.save(model.state_dict(), os.path.join(save_path, f'epoch_{epoch}.pth'))
 
         if epoch % cfg['TRAIN']['DISPLAY_EPOCH'] == 0:
-            print(f'true_signal: ', true_signal_list[0, -10:].detach().cpu().numpy())
+            print('true_signal: ', true_signal_list[0, -10:].detach().cpu().numpy())
             print('output: ', output_list[0, -10:, 0].detach().cpu().numpy())
             print(f'Train Epoch: {epoch}, TrueValueLoss: {true_value_loss.item() / 5000:.3f}')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN training')

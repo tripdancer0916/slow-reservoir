@@ -14,16 +14,16 @@ class State:
 
 class DynamicState(data.Dataset):
     def __init__(
-                self,
-                time_length,
-                input_neuron,
-                uncertainty,
-                transition_probability,
-                sigma_sq=5,
-                g_min=0.25,
-                g_max=1.25,
-                batch_size=50,
-                ):
+        self,
+        time_length,
+        input_neuron,
+        uncertainty,
+        transition_probability,
+        sigma_sq=5,
+        g_min=0.25,
+        g_max=1.25,
+        batch_size=50,
+    ):
         self.time_length = time_length
         self.input_neuron = input_neuron
         self.uncertainty = uncertainty
@@ -59,7 +59,7 @@ class DynamicState(data.Dataset):
 
             if np.random.rand() < self.transition_probability:
                 current_state = State(mu=np.random.rand()-0.5, sigma=np.random.rand()*0.8)
-            
+
             mu_history.append(current_state.mu)
             sigma_history.append(current_state.sigma)
         mu_history = np.array(mu_history, dtype='float')

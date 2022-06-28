@@ -6,10 +6,10 @@ import torch.nn as nn
 
 class RNNSimple(nn.Module):
     def __init__(
-                self, n_in, n_out, n_hid, 
-                device, alpha=1,
-                sigma_neu=0.05, activate_func='relu',
-                ):
+        self, n_in, n_out, n_hid,
+        device, alpha=1,
+        sigma_neu=0.05, activate_func='relu',
+    ):
         super().__init__()
         self.n_in = n_in
         self.n_hid = n_hid
@@ -17,7 +17,7 @@ class RNNSimple(nn.Module):
         self.w_in = nn.Linear(n_in, n_hid)
         self.w_hh = nn.Linear(n_hid, n_hid)
         self.w_out = nn.Linear(n_hid, n_out)
-        
+
         self.sigma_neu = sigma_neu
         self.device = device
 
@@ -44,7 +44,7 @@ class RNNSimple(nn.Module):
             elif self.activate_func == 'tanh':
                 tmp_hidden = torch.nn.functional.tanh(tmp_hidden)
             elif self.activate_func == 'relu_clamped':
-                tmp_hidden = torch.nn.functional.relu(tmp_hidden) 
+                tmp_hidden = torch.nn.functional.relu(tmp_hidden)
                 tmp_hidden = torch.clamp(tmp_hidden, max=2)
             else:
                 raise NotImplementedError
@@ -65,9 +65,9 @@ class RNNSimple(nn.Module):
 
 class RNNSimpleTrainableAlpha(nn.Module):
     def __init__(
-                self, n_in, n_out, n_hid, 
-                device, sigma_neu=0.05, activate_func='relu',
-                ):
+        self, n_in, n_out, n_hid,
+        device, sigma_neu=0.05, activate_func='relu',
+    ):
         super().__init__()
         self.n_in = n_in
         self.n_hid = n_hid
@@ -75,7 +75,7 @@ class RNNSimpleTrainableAlpha(nn.Module):
         self.w_in = nn.Linear(n_in, n_hid)
         self.w_hh = nn.Linear(n_hid, n_hid)
         self.w_out = nn.Linear(n_hid, n_out)
-        
+
         self.sigma_neu = sigma_neu
         self.device = device
 
@@ -104,7 +104,7 @@ class RNNSimpleTrainableAlpha(nn.Module):
             elif self.activate_func == 'tanh':
                 tmp_hidden = torch.nn.functional.tanh(tmp_hidden)
             elif self.activate_func == 'relu_clamped':
-                tmp_hidden = torch.nn.functional.relu(tmp_hidden) 
+                tmp_hidden = torch.nn.functional.relu(tmp_hidden)
                 tmp_hidden = torch.clamp(tmp_hidden, max=2)
             else:
                 raise NotImplementedError

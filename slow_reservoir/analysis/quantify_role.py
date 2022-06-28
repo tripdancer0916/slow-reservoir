@@ -2,7 +2,6 @@ import argparse
 
 from analysis.bayesian_optimality import BayesianOptimality
 
-
 parser = argparse.ArgumentParser(description='PyTorch RNN training')
 parser.add_argument('config_path', type=str)
 parser.add_argument('model_path', type=str)

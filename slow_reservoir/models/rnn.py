@@ -6,10 +6,10 @@ import torch.nn as nn
 
 class RNN(nn.Module):
     def __init__(
-                self, n_in, n_out, n_hid, n_reservoir, 
-                device, alpha_fast=1, alpha_slow=0.1, jij_std=0.045,
-                sigma_neu=0.05, activate_func='relu',
-                ):
+        self, n_in, n_out, n_hid, n_reservoir,
+        device, alpha_fast=1, alpha_slow=0.1, jij_std=0.045,
+        sigma_neu=0.05, activate_func='relu',
+    ):
         super(RNN, self).__init__()
         self.n_in = n_in
         self.n_hid = n_hid
@@ -23,7 +23,7 @@ class RNN(nn.Module):
         self.w_sf = nn.Linear(n_reservoir, n_hid)
         self.w_reservoir = nn.Linear(n_reservoir, n_reservoir)
         self.w_prior = nn.Linear(n_reservoir, n_in)
-        
+
         self.sigma_neu = sigma_neu
         self.jij_std = jij_std
         self.device = device
@@ -55,7 +55,7 @@ class RNN(nn.Module):
                 tmp_hidden = torch.nn.functional.relu(tmp_hidden)
                 tmp_reservoir = torch.nn.functional.relu(tmp_reservoir)
             elif self.activate_func == 'tanh':
-                tmp_hidden = torch.nn.functional.tanh(tmp_hidden) 
+                tmp_hidden = torch.nn.functional.tanh(tmp_hidden)
                 tmp_reservoir = torch.nn.functional.tanh(tmp_reservoir)
             elif self.activate_func == 'relu_clamped':
                 tmp_hidden = torch.nn.functional.relu(tmp_hidden)
@@ -84,9 +84,9 @@ class RNN(nn.Module):
 
 class RNNTrainableAlpha(nn.Module):
     def __init__(
-                self, n_in, n_out, n_hid, n_reservoir, 
-                device, sigma_neu=0.05, activate_func='relu',
-                ):
+        self, n_in, n_out, n_hid, n_reservoir,
+        device, sigma_neu=0.05, activate_func='relu',
+    ):
         super(RNNTrainableAlpha, self).__init__()
         self.n_in = n_in
         self.n_hid = n_hid
@@ -99,7 +99,7 @@ class RNNTrainableAlpha(nn.Module):
         self.w_sf = nn.Linear(n_reservoir, n_hid)
         self.w_reservoir = nn.Linear(n_reservoir, n_reservoir)
         self.w_prior = nn.Linear(n_reservoir, n_in)
-        
+
         self.sigma_neu = sigma_neu
         self.device = device
 
@@ -127,7 +127,7 @@ class RNNTrainableAlpha(nn.Module):
                 tmp_hidden = torch.nn.functional.relu(tmp_hidden)
                 tmp_reservoir = torch.nn.functional.relu(tmp_reservoir)
             elif self.activate_func == 'tanh':
-                tmp_hidden = torch.nn.functional.tanh(tmp_hidden) 
+                tmp_hidden = torch.nn.functional.tanh(tmp_hidden)
                 tmp_reservoir = torch.nn.functional.tanh(tmp_reservoir)
             elif self.activate_func == 'relu_clamped':
                 tmp_hidden = torch.nn.functional.relu(tmp_hidden)
