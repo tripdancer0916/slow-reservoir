@@ -1,3 +1,4 @@
+import argparse
 import math
 import os
 import sys
@@ -11,7 +12,7 @@ from dataset.dynamic_state_random import State
 from models.rnn import RNN, RNNTrainableAlpha
 
 
-class DivisionRoles:
+class RoleDivision:
     sigma_sq = 0.5
     phi = np.linspace(-2, 2, 100)
     mu_l_list = np.linspace(-1, 1, 200)
@@ -82,13 +83,13 @@ class DivisionRoles:
 
         return input_signals
 
-    def calc_variance(self):
+    def calc_variance(self, sample_num):
         neural_states = np.zeros((500, 200))
         reservoir_states = np.zeros((500, 50))
 
         mu_p_list = []
         sigma_p_list = []
-        for i in range(500):
+        for i in range(sample_num):
             mu_p = np.random.rand() - 0.5
             sigma_p = np.random.rand() * 0.8
             mu_p_list.append(mu_p)
@@ -109,7 +110,7 @@ class DivisionRoles:
             hidden = hidden.to(self.device)
             reservoir = torch.from_numpy(reservoir_np).float()
             reservoir = reservoir.to(self.device)
-            hidden_list, _, _, reservoir_list = self.model(inputs, hidden, reservoir, 50)
+            hidden_list, _, reservoir_list = self.model(inputs, hidden, reservoir, 50)
 
             neural_dynamics = hidden_list.cpu().detach().numpy()
             reservoir_dynamics = reservoir_list.cpu().detach().numpy()
@@ -133,27 +134,43 @@ class DivisionRoles:
         hidden = hidden.to(self.device)
         reservoir = torch.from_numpy(reservoir_np).float()
         reservoir = reservoir.to(self.device)
-        hidden_list, _, _, reservoir_list = self.model(inputs, hidden, reservoir, 50)
+        hidden_list, _, reservoir_list = self.model(inputs, hidden, reservoir, 50)
 
         base_neural_state = hidden_list.cpu().detach().numpy()[:, -1]
         base_reservoir_state = reservoir_list.cpu().detach().numpy()[:, -1]
 
-        input_signal = self.make_sample_signal(0, 500)
+        input_signal = self.make_sample_signal(0, sample_num)
         inputs = torch.from_numpy(input_signal).float().to(self.device)
 
         hidden = torch.from_numpy(base_neural_state).float().to(self.device)
         reservoir = torch.from_numpy(reservoir_states).float().to(self.device)
-        _, output_list, _, _ = self.model(inputs, hidden, reservoir, 1)
+        _, output_list, _ = self.model(inputs, hidden, reservoir, 1)
 
         var_sub = np.var(output_list[:, 0, 0].detach().numpy())
 
-        input_signal = self.make_sample_signal(0, 500)
+        input_signal = self.make_sample_signal(0, sample_num)
         inputs = torch.from_numpy(input_signal).float().to(self.device)
 
         hidden = torch.from_numpy(neural_states).float().to(self.device)
         reservoir = torch.from_numpy(base_reservoir_state).float().to(self.device)
-        _, output_list, _, _ = self.model(inputs, hidden, reservoir, 1)
+        _, output_list, _ = self.model(inputs, hidden, reservoir, 1)
 
         var_main = np.var(output_list[:, 0, 0].detach().numpy())
 
         return var_sub, var_main
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='PyTorch RNN training')
+    parser.add_argument('config_path', type=str)
+    parser.add_argument('model_path', type=str)
+    parser.add_argument('-sn', '--sample_num', type=int, default=1000)
+    args = parser.parse_args()
+    print(f'args: {args}')
+    role_division = RoleDivision(
+        config_path=args.config_path,
+        model_path=args.model_path,
+    )
+    var_sub, var_main = role_division.calc_variance(sample_num=args.sample_num)
+    print(f'Variation sub: {var_sub:.5f}')
+    print(f'Variation main: {var_main:.5f}')
