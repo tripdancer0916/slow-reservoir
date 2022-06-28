@@ -25,6 +25,9 @@ class BayesianOptimality:
         with open(config_path, 'r') as f:
             cfg = yaml.safe_load(f)
 
+        if 'ACTIVATE_FUNC' not in cfg['MODEL']:
+            cfg['MODEL']['ACTIVATE_FUNC'] = 'relu'
+
         model_name = os.path.splitext(os.path.basename(config_path))[0]
         print('model_name: ', model_name)
 
@@ -75,7 +78,7 @@ class BayesianOptimality:
                     activate_func=cfg['MODEL']['ACTIVATE_FUNC'],
                 ).to(device)
 
-        model.load_state_dict(torch.load(model_path, map_location=self.device))
+        model.load_state_dict(torch.load(model_path, map_location=device))
         self.model = model.eval()
         self.device = device
 
@@ -189,6 +192,7 @@ if __name__ == '__main__':
     parser.add_argument('config_path', type=str)
     parser.add_argument('model_path', type=str)
     parser.add_argument('-tp', '--transition_probability', type=float, default=0.03)
+    parser.add_argument('-sn', '--sample_num', type=int, default=1000)
     args = parser.parse_args()
     print(f'args: {args}')
     bayesian_optimality = BayesianOptimality(
@@ -196,5 +200,5 @@ if __name__ == '__main__':
         model_path=args.model_path,
         transition_probability=args.transition_probability,
     )
-    mse = bayesian_optimality.evaluate_optimality()
+    mse = bayesian_optimality.evaluate_optimality(sample_num=args.sample_num)
     print(f'Mean Squared Error: {mse:.5f}')

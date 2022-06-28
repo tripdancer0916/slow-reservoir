@@ -57,8 +57,18 @@ $ python train_random_dynamic_state.py {cfg_path}
 
 #### ベイズ推定の最適性
 ```bash
-$ python quantify_role.py ../cfg/dynamic_state/20220526_all_slow.cfg ../trained_model/dynamic_state_random/20220526_all_slow/epoch_500.pth
-$ python quantify_role.py {cfg_path} {model_path}
+$ python bayesian_optimality.py \
+     ../cfg/dynamic_state/20220526_all_slow.cfg \
+     ../trained_model/dynamic_state_random/20220526_all_slow/epoch_500.pth \
+     -tp 0.03 \
+     -sn 500
+$ python bayesian_optimality.py {cfg_path} {model_path} \
+     -tp {transition_probability} -sn {sample_num}
+```
+
+結果は`Mean Squared Error`として出力される。
+```
+Mean Squared Error: 0.02802
 ```
 
 #### priorを符号化する際の計算モデル
