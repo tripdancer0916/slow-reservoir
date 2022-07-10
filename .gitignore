@@ -1,5 +1,4 @@
 __pycache__/
-slow_reservoir/cfg/
 slow_reservoir/trained_model/
 .vscode
 sandbox/
