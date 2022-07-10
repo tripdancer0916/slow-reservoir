@@ -85,8 +85,8 @@ class RoleDivision:
         return input_signals
 
     def calc_variance(self, sample_num):
-        neural_states = np.zeros((sample_num, 200))
-        reservoir_states = np.zeros((sample_num, 50))
+        neural_states = np.zeros((sample_num, self.cfg['MODEL']['SIZE']))
+        reservoir_states = np.zeros((sample_num, self.cfg['MODEL']['RESERVOIR']))
 
         mu_p_list = []
         sigma_p_list = []
@@ -148,9 +148,6 @@ class RoleDivision:
         _, output_list, _ = self.model(inputs, hidden, reservoir, 1)
 
         var_sub = np.var(output_list[:, 0, 0].detach().numpy())
-
-        input_signal = self.make_sample_signal(0, sample_num)
-        inputs = torch.from_numpy(input_signal).float().to(self.device)
 
         hidden = torch.from_numpy(neural_states).float().to(self.device)
         reservoir = torch.from_numpy(base_reservoir_state).float().to(self.device)
