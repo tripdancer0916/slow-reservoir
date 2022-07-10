@@ -76,6 +76,7 @@ if __name__ == '__main__':
     plt.gca().spines['top'].set_visible(False)
     plt.gca().yaxis.set_ticks_position('left')
     plt.gca().xaxis.set_ticks_position('bottom')
+    plt.ylim(bottom=0)
 
     os.makedirs('results', exist_ok=True)
     plt.savefig(f'results/bayesian_optimality_tp.png', dpi=200)
