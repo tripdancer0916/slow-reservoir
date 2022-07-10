@@ -13,7 +13,7 @@ cfg_dict = {
     1: [
         '20220428_1',
         '20220509_1',
-        '20220526_1_2',
+        '20220509_1',
     ],
     0.5: [
         '20220428_2',
@@ -48,7 +48,7 @@ v_m_list = np.zeros((6, 3))
 for i, key in enumerate(cfg_dict):
     for j, cfg_name in enumerate(cfg_dict[key]):
         role_division = RoleDivision(
-            config_path=f'../cfg/dynamic_state/{cfg_name}',
+            config_path=f'../cfg/dynamic_state/{cfg_name}.cfg',
             model_path=f'../trained_model/dynamic_state_random/{cfg_name}/epoch_500.pth',
         )
         var_sub, var_main = role_division.calc_variance(sample_num=500)
@@ -66,15 +66,24 @@ labels = [1, 0.5, 0.2, 0.1, 0.05, 0.01]
  
 width = 0.3
  
-plt.bar(left, var_s_mean, yerr=var_s_std, color='b', width=width, capsize = 2, align='center')
-plt.bar(left+width, var_m_mean, yerr=var_m_std, color='r', width=width, capsize = 2, align='center')
+plt.figure(constrained_layout=True)
+plt.bar(
+    left, var_s_mean, yerr=var_s_std, color='b', 
+    width=width, capsize = 2, align='center', label=r'$V_s$',
+)
+plt.bar(
+    left+width, var_m_mean, yerr=var_m_std, color='r', 
+    width=width, capsize = 2, align='center', label=r'$V_m$',
+)
  
+plt.legend(fontsize=16)
 plt.xticks(left + width/2, labels)
-
+plt.xlabel(r'$\alpha_s$', fontsize=16)
+plt.ylabel(r'$V_s, V_m$', fontsize=16)
 plt.gca().spines['right'].set_visible(False)
 plt.gca().spines['top'].set_visible(False)
 plt.gca().yaxis.set_ticks_position('left')
 plt.gca().xaxis.set_ticks_position('bottom')
 
 os.makedirs('results', exist_ok=True)
-plt.savefig('division_of_roles.png', dpi=200)
+plt.savefig('results/division_of_roles.png', dpi=200)
