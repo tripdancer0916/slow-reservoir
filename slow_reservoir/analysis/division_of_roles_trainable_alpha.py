@@ -91,13 +91,13 @@ class RoleDivisionTrainableAlpha(RoleDivision):
         inputs = torch.from_numpy(input_signal).float().to(self.device)
 
         hidden = torch.stack([hidden_list[:, -1] for _ in range(sample_num)], 0)
-        hidden = hidden.reshape(500, 80)
+        hidden = hidden.reshape(sample_num, 80)
         hidden[:, slow_ids] = torch.from_numpy(slow_states).float()
         _, output_list = self.model(inputs, hidden, 1)
         var_slow = np.var(output_list[:, 0, 0].detach().numpy())
 
         hidden = torch.stack([hidden_list[:, -1] for _ in range(sample_num)], 0)
-        hidden = hidden.reshape(500, 80)
+        hidden = hidden.reshape(sample_num, 80)
         hidden[:, fast_ids] = torch.from_numpy(fast_states).float()
         _, output_list = self.model(inputs, hidden, 1)
         var_fast = np.var(output_list[:, 0, 0].detach().numpy())
