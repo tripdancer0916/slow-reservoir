@@ -61,7 +61,8 @@ class BayesianOptimality:
                     n_out=1,
                     n_hid=cfg['MODEL']['SIZE'],
                     device=device,
-                    alpha=cfg['MODEL']['ALPHA_FAST'],
+                    alpha_m=cfg['MODEL']['ALPHA_MAIN'],
+                    alpha_s=cfg['MODEL']['ALPHA_SUB'],
                     sigma_neu=cfg['MODEL']['SIGMA_NEU'],
                     activate_func=cfg['MODEL']['ACTIVATE_FUNC'],
                 ).to(device)

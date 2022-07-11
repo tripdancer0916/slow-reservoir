@@ -24,10 +24,9 @@ cfg_dict = {
     ],
 }
 
-mse_list = np.zeros((2, 6, 3))
+mse_list = np.zeros((2, 7, 3))
 
-tp_list = [0, 0.01, 0.02, 0.04, 0.06, 0.08]
-
+tp_list = [0, 0.01, 0.02, 0.1, 0.2, 0.3, 0.5]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch RNN training')
@@ -78,4 +77,4 @@ if __name__ == '__main__':
     plt.gca().xaxis.set_ticks_position('bottom')
 
     os.makedirs('results', exist_ok=True)
-    plt.savefig(f'results/bayesian_optimality_tp.png', dpi=200)
+    plt.savefig(f'results/bayesian_optimality_tp_4.png', dpi=200)
