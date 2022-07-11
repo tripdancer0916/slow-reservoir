@@ -7,7 +7,7 @@ import torch.nn as nn
 class RNNSimple(nn.Module):
     def __init__(
         self, n_in, n_out, n_hid,
-        device, alpha=1,
+        device, alpha_m=1, alpha_s=1,
         sigma_neu=0.05, activate_func='relu',
     ):
         super().__init__()
@@ -21,7 +21,9 @@ class RNNSimple(nn.Module):
         self.sigma_neu = sigma_neu
         self.device = device
 
-        self.alpha = torch.ones(self.n_hid) * alpha
+        self.alpha = torch.ones(self.n_hid)
+        self.alpha[:200] = torch.ones(200) * alpha_m
+        self.alpha[200:] = torch.ones(50) * alpha_s
         self.alpha = self.alpha.to(self.device)
 
         self.activate_func = activate_func
