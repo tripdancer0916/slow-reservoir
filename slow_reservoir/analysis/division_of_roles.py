@@ -79,8 +79,9 @@ class RoleDivision:
         input_signals = np.zeros([batch_size, 1, 100])
 
         signal_base = g * np.exp(-(signal_mu - self.phi) ** 2 / (2.0 * self.sigma_sq))
+        tmp = np.random.poisson(signal_base)
         for i in range(batch_size):
-            input_signals[i, 0] = np.random.poisson(signal_base)
+            input_signals[i, 0] = tmp
 
         return input_signals
 
